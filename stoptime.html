@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Stopwatch</title>
+  <style>
+    :root {
+      --bg: #1e1e2f;
+      --fg: white;
+      --accent: #00cfff;
+    }
+    body.light {
+      --bg: #f4f4f4;
+      --fg: #222;
+      --accent: #0077cc;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: 0.3s ease;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0,0,0,0.1);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 25px var(--accent);
+      width: 90%;
+      max-width: 500px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .time {
+      font-size: 3rem;
+      margin: 20px 0;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .buttons button {
+      margin: 8px;
+      padding: 10px 16px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: var(--accent);
+      color: white;
+      transition: 0.2s ease;
+    }
+
+    .buttons button:hover {
+      opacity: 0.85;
+    }
+
+    .options {
+      margin-top: 15px;
+    }
+
+    ul#laps {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    #laps li {
+      background: rgba(255,255,255,0.1);
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 5px;
+    }
+
+    .toggle-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--accent);
+      background: transparent;
+      border: 1px solid var(--accent);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-btn" onclick="toggleTheme()">Toggle Theme</button>
+  <div class="container">
+    <h1>Advanced Stopwatch</h1>
+    <div class="time" id="display">00:00:00.000</div>
+    <div class="buttons">
+      <button onclick="start()">Start</button>
+      <button onclick="pause()">Pause</button>
+      <button onclick="reset()">Reset</button>
+      <button onclick="lap()">Lap</button>
+    </div>
+    <div class="options">
+      <button onclick="downloadLaps()">Download Laps</button>
+    </div>
+    <ul id="laps"></ul>
+  </div>
+
+  <script>
+    let startTime, updatedTime, difference = 0, tInterval;
+    let isRunning = false;
+    const display = document.getElementById("display");
+    const laps = document.getElementById("laps");
+
+    function start() {
+      if (!isRunning) {
+        startTime = new Date().getTime() - difference;
+        tInterval = setInterval(updateTime, 10);
+        isRunning = true;
+      }
+    }
+
+    function pause() {
+      if (isRunning) {
+        clearInterval(tInterval);
+        difference = new Date().getTime() - startTime;
+        isRunning = false;
+      }
+    }
+
+    function reset() {
+      clearInterval(tInterval);
+      display.textContent = "00:00:00.000";
+      difference = 0;
+      isRunning = false;
+      laps.innerHTML = "";
+    }
+
+    function lap() {
+      if (isRunning) {
+        const li = document.createElement("li");
+        li.textContent = display.textContent;
+        laps.appendChild(li);
+      }
+    }
+
+    function updateTime() {
+      updatedTime = new Date().getTime();
+      difference = updatedTime - startTime;
+
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      const milliseconds = Math.floor((difference % 1000));
+
+      display.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${padMilli(milliseconds)}`;
+    }
+
+    function pad(num) {
+      return num < 10 ? "0" + num : num;
+    }
+
+    function padMilli(num) {
+      return num < 10 ? "00" + num : num < 100 ? "0" + num : num;
+    }
+
+    function downloadLaps() {
+      let text = "";
+      document.querySelectorAll("#laps li").forEach((li, i) => {
+        text += `Lap ${i + 1}: ${li.textContent}\n`;
+      });
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "lap_times.txt";
+      link.click();
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+    }
+  </script>
+</body>
+</html>
